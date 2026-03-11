@@ -5,8 +5,8 @@
 # Stage 1: Install production dependencies
 FROM node:20-alpine AS deps
 WORKDIR /app
-COPY Backend/package.json Backend/package-lock.json ./
-RUN npm ci --only=production
+COPY Backend/package.json ./
+RUN npm install --omit=optional --ignore-scripts
 
 # Stage 2: Production image
 FROM node:20-alpine AS runner
