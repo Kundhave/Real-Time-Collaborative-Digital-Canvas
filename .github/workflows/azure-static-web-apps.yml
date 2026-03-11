@@ -36,14 +36,15 @@ jobs:
           VITE_API_URL: ${{ vars.VITE_API_URL }}
         run: npm run build
 
+      - name: Copy config to dist
+        run: cp Frontend/staticwebapp.config.json Frontend/dist/staticwebapp.config.json
+
       - name: Verify build output
         run: |
           echo "=== dist contents ==="
           ls -la Frontend/dist/
           echo "=== dist/index.html ==="
           cat Frontend/dist/index.html
-          echo "=== assets ==="
-          ls Frontend/dist/assets/ | head -10
 
       - name: Deploy to Azure Static Web Apps
         id: deploy
@@ -52,8 +53,8 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: upload
-          app_location: Frontend
-          output_location: dist
+          app_location: Frontend/dist
+          output_location: ""
           skip_app_build: true
 
   close_pull_request:
