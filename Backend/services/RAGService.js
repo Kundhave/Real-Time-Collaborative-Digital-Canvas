@@ -3,16 +3,17 @@ const fs = require('fs');
 const path = require('path');
 
 // --- Dynamic ML import (avoids ERR_DLOPEN_FAILED on Railway) ---
-let pipelineFn = null;
+let pipeline = null;
 let ragAvailable = false;
 
 const initML = async () => {
     try {
-        // The ignore comment tells Node/Webpack to treat this as optional
-        const { pipeline: p } = await import(
-            /* webpackIgnore: true */ '@xenova/transformers'
-        );
-        pipelineFn = p;
+        const mod = await import('@xenova/transformers').catch(() => null);
+        if (!mod) {
+            console.warn('⚠️ RAG unavailable — @xenova/transformers not installed');
+            return;
+        }
+        pipeline = mod.pipeline;
         ragAvailable = true;
         console.log('✅ RAG/ML libraries loaded successfully');
     } catch (err) {
@@ -46,7 +47,7 @@ class RAGService {
         if (this.isInitialized) return;
 
         // Graceful fallback if ML libraries are not available
-        if (!ragAvailable || !pipelineFn) {
+        if (!ragAvailable || !pipeline) {
             console.warn('⚠️ RAG initialization skipped — ML libraries not available');
             return;
         }
@@ -61,7 +62,7 @@ class RAGService {
         }
 
         // 2. Load Feature Extractor (Local Embeddings)
-        this.extractor = await pipelineFn('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+        this.extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
 
         // 3. Pre-compute vector embeddings for Knowledge Base
         for (const item of this.knowledgeBase) {
@@ -110,7 +111,7 @@ class RAGService {
 
     async chatStream(userMessage, contextSnapshot, res) {
         // --- Graceful fallback if ML/RAG is unavailable ---
-        if (!ragAvailable || !pipelineFn) {
+        if (!ragAvailable || !pipeline) {
             res.setHeader('Content-Type', 'text/event-stream');
             res.setHeader('Cache-Control', 'no-cache');
             res.setHeader('Connection', 'keep-alive');
