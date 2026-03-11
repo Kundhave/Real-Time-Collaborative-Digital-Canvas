@@ -8,8 +8,11 @@ let ragAvailable = false;
 
 const initML = async () => {
     try {
-        const transformers = await import('@xenova/transformers');
-        pipelineFn = transformers.pipeline;
+        // The ignore comment tells Node/Webpack to treat this as optional
+        const { pipeline: p } = await import(
+            /* webpackIgnore: true */ '@xenova/transformers'
+        );
+        pipelineFn = p;
         ragAvailable = true;
         console.log('✅ RAG/ML libraries loaded successfully');
     } catch (err) {
