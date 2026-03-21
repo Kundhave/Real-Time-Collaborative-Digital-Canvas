@@ -107,7 +107,7 @@ exports.generateInstantMeetingCredentials = async (req, res) => {
     const password = crypto.randomBytes(3).toString('hex'); // e.g., "a7f39b"
     const linkToken = crypto.randomBytes(32).toString('hex'); // Generate link token
     const clientUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    const shareLink = `${clientUrl}/join-link/${linkToken}`;
+    const shareLink = `${clientUrl}/#/join-link/${linkToken}`;
     
     res.status(200).json({
       success: true,
@@ -157,7 +157,7 @@ exports.createInstantMeeting = async (req, res) => {
       meetingId,
       password,
       linkToken,
-      shareLink: `${clientUrl}/join-link/${linkToken}`,
+      shareLink: `${clientUrl}/#/join-link/${linkToken}`,
       canvas: canvasToUse._id,
       host: req.user._id,
       participants: [],
@@ -300,7 +300,9 @@ exports.createMeeting = async (req, res) => {
     let startTime = new Date();
     if (isScheduled) {
       meetingStatus = 'pending';
-      startTime = new Date(`${scheduledDate}T${scheduledTime}`);
+      startTime = req.body.scheduledISO
+        ? new Date(req.body.scheduledISO)
+        : new Date(`${scheduledDate}T${scheduledTime}`);
     }
 
     // 5. Create Meeting (canvas may be null for scheduled meetings)
@@ -309,7 +311,7 @@ exports.createMeeting = async (req, res) => {
       meetingId,
       password,
       linkToken,
-      shareLink: `${clientUrl}/join-link/${linkToken}`,
+      shareLink: `${clientUrl}/#/join-link/${linkToken}`,
       canvas: canvasToUse ? canvasToUse._id : null,
       host: req.user._id,
       participants: [],
